@@ -1,0 +1,35 @@
+stages:
+  - preparar
+  - desplegar
+  - configurar
+
+copiar_env:
+  stage: preparar
+  script:
+    - 'cp $ENVFILE /var/www/backend/.env'
+  only:
+    - main
+
+copiar_archivos:
+  stage: desplegar
+  script:
+    - npm install
+    - npm run build
+    - 'rsync -rv --exclude node_modules --exclude=.env --exclude=.git --exclude=vendor ./ /var/www/backend'
+  only:
+    - main
+
+instalar_dependencias_y_optimizar:
+  stage: configurar
+  script:
+    - 'cd /var/www/backend'
+    - 'composer update'
+    - 'composer install'
+    - 'php artisan optimize'
+    - 'php artisan cache:clear'
+    - 'php artisan config:cache'
+    - 'php artisan route:cache'
+    - 'php artisan view:cache'
+  only:
+    - main
+
